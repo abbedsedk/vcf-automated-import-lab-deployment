@@ -4,15 +4,17 @@
 # Website: strivevirtually.net
 
 # vCenter Server used to deploy VCF Import Lab
-$VIServer = "FILL_ME_IN"
-$VIUsername = "FILL_ME_IN"
-$VIPassword = "FILL_ME_IN"
+$VIServer = "192.168.1.91"
+$VIUsername = "administrator@vsphere.local"
+$VIPassword = "VMware1!"
 
-# Full Path to the Nested ESXi 8.0u3b OVA, SDDC 5.2.1.1 OVA, VCF Import Tool 5.2.1.2 & Extracted VCSA 8.0.3d ISO
-$NestedESXiApplianceOVA = "L:\Downloads\Nested_ESXi8.0u3b_Appliance_Template_v1.ova"
-$VCSAInstallerPath = "L:\Downloads\VMware-VCSA-all-8.0.3-24322831"
+# Full Path to the Nested ESXi 8.0u3C OVA, SDDC 5.2.1.1 OVA, VCF Import Tool 5.2.1.2 & Extracted VCSA 8.0.3d ISO
+$NestedESXiApplianceOVA = "O:\LAB\Nested_ESXi8.0u3c_Appliance_Template_v1.ova"
+$VCSAInstallerPath = "O:\LAB\VMware-VCSA-all-8.0.3-24322831"
 $SDDCManagerOVA = "L:\Downloads\VCF-SDDC-Manager-Appliance-5.2.1.1-24397777.ova"
-$VCFImportToolpath = "L:\Downloads\vcf-brownfield-import-5.2.1.2-24494579.tar.gz"
+$VCFImportToolpath = "O:\LAB\vcf-brownfield-import-5.2.1.2-24494579.tar.gz"
+
+$vLCMversion = "8.0 U3c - 24414501" # Minimum "8.0 U3b - 24280767"
 
 # Full Path to VCF 5.2.1 NSX 4.2.1 Bundle and NSX spec file
 $NSXBundlePath = "L:\Downloads\bundle-133764.zip"
@@ -20,21 +22,38 @@ $NsxSpecJsonPath = "L:\Downloads\nsx-deployment-spec.json"
 
 # Nested ESXi VMs to deploy
 $NestedESXiHostnameToIPs = @{
-    "esxi-01" = "172.30.0.101"
-    "esxi-02" = "172.30.0.102"
-    "esxi-03" = "172.30.0.103"
-    "esxi-04" = "172.30.0.104"
+    "esxi-01" = "172.17.31.101"
+    "esxi-02" = "172.17.31.102"
+    #"esxi-03" = "172.17.31.103"
+    #"esxi-04" = "172.17.31.104"
 }
+
+# NFS configurations
+$NestedESXiNFSkernelIPs = @{
+    "172.17.31.101" = "172.17.33.101"
+    "172.17.31.102" = "172.17.33.102"
+    #"172.17.31.103" = "172.17.33.103"
+    #"172.17.31.104" = "172.17.33.103"
+}
+
+$NfsHost = "172.17.33.2" # NFS Sever on same network subnet as $NestedESXiNFSkernelIPs
+$NfsVmk1VlanId = 33
+$NfsVlanId = 4095
+$NfsDatastoreName = "NFS-Datastore"
+$NfsDatastorePath = "/NFS"
+$NFSNetwork = "NFS-OUTER" # Portgroup vlan 4095 must exist on the physical ESXi host on vSwitch with mtu 9000 and vmkernel on same range as $NfsHost
+$NewVCNfsPortgroupName = "DVPG-Nfs-Network"
+$NFSMTU = 9000
 
 # Nested ESXi VM Resources
 $NestedESXivCPU = "6"
 $NestedESXivMEM = "46" #GB
 $NestedESXiCachingvDisk = "8" #GB
-$NestedESXiCapacityvDisk = "500" #GB
+$NestedESXiCapacityvDisk = "500" #GB not used for NFS deployment
 
 # SDDC Manager Configuration
 $SddcManagerDisplayName = "sddcm"
-$SddcManagerIP = "172.30.0.100"
+$SddcManagerIP = "172.17.31.99"
 $SddcManagerHostname = "sddcm"
 $SddcManagerVcfPassword = "VMware1!VMware1!"
 $SddcManagerRootPassword = "VMware1!VMware1!"
@@ -42,32 +61,32 @@ $SddcManagerAdminPassword = "VMware1!VMware1!"
 $SddcManagerLocalPassword = "VMware1!VMware1!"
 $SddcManagerBackupPassword = "VMware1!VMware1!"
 $SddcManagerFIPSEnable = $false
-$VCFManagementDomainName = "wlam-mgmt"
+$VCFManagementDomainName = "abs-mgmt"
 
 # VCSA Deployment Configuration
 $VCSADeploymentSize = "tiny"
-$VCSADisplayName = "vcsa"
-$VCSAIPAddress = "172.30.0.99"
-$VCSAHostname = "vcsa"
-$VCSAPrefix = "22"
+$VCSADisplayName = "vc01"
+$VCSAIPAddress = "172.17.31.112"
+$VCSAHostname = "vc01"
+$VCSAPrefix = "24"
 $VCSASSODomainName = "vsphere.local"
 $VCSASSOPassword = "VMware1!"
 $VCSARootPassword = "VMware1!"
 $VCSASSHEnable = "true"
 
 # General Deployment Configuration for Nested ESX & VCSA VM
-$VMDatacenter = "Palo Alto"
-$VMCluster = "Production"
-$VMNetwork = "production-network"
-$VMDatastore = "vsanDatastore"
+$VMDatacenter = "TLS-Datacenter"
+$VMCluster = "Cluster-01"
+$VMNetwork = "VM Network"
+$VMDatastore = "datastore1"
 $VMNetmask = "255.255.255.0"
-$VMGateway = "172.30.0.1"
-$VMDNS = "172.30.0.2"
-$VMNTP = "172.30.0.3"
+$VMGateway = "172.17.31.1"
+$VMDNS = "192.168.1.100"
+$VMNTP = "pool.ntp.org"
 $VMPassword = "VMware1!"
-$VMDomain = "williamlam.com"
-$VMSyslog = "172.30.0.4"
-$VMFolder = "wlam-vcf-deployment-testing"
+$VMDomain = "abs.system"
+$VMSyslog = "172.17.31.112"
+$VMFolder = "abs-vcf-deployment-testing"
 # Applicable to Nested ESXi only
 $VMSSH = "true"
 
@@ -83,13 +102,13 @@ $hostFailuresToTolerate = 0
 # Deployment Configuration for NSX
 $NsxFormFactor = "small"
 $NSXClusterVipHostname = "$VCFManagementDomainName-nsxm-vip"
-$NSXClusterVip = "172.30.0.95"
+$NSXClusterVip = "172.17.31.95"
 $NSXManagerNode1Hostname = "$VCFManagementDomainName-nsxm-1"
-$NSXManagerNode1IP = "172.30.0.96"
+$NSXManagerNode1IP = "172.17.31.96"
 $NSXManagerNode2Hostname = "$VCFManagementDomainName-nsxm-2"
-$NSXManagerNode2IP = "172.30.0.97"
+$NSXManagerNode2IP = "172.17.31.97"
 $NSXManagerNode3Hostname = "$VCFManagementDomainName-nsxm-3"
-$NSXManagerNode3IP = "172.30.0.98"
+$NSXManagerNode3IP = "172.17.31.98"
 
 
 # Advanced Configurations
@@ -107,18 +126,21 @@ $preCheck = 1
 $confirmDeployment = 1
 $deployNestedESXiVMs = 1
 $moveVMsIntovApp = 1
-$bootStrapFirstNestedESXiVM = 1
+$setupNFSforNestedESXiVMs = 1
+$bootStrapFirstNestedESXiVM = 0
 $deployVCSA = 1
 $setupNewVC = 1
 $addESXiHostsToVC = 1
-$configureVSANDiskGroup = 1
-$setupVsanStoragePolicy = 1
+$EnableVLCM = 1
+$configureVSANDiskGroup = 0
+$setupVsanStoragePolicy = 0
 $configureVDS = 1
 $migrateVMstoVDS = 1
 $migrateVmkernelToVDS = 1
 $removeVSS = 1
 $finalCleanUp = 1
 $deploySDDCManager = 1
+$pinningVCSDDCMvm = 1
 $uploadVCFImportTool = 1
 $generateNsxSpecJson = 1
 $uploadNSXBundlePath = 1
@@ -177,9 +199,11 @@ if($preCheck -eq 1) {
         exit
     }
     
-    if(!(Test-Path $NSXBundlePath)) {
-        Write-Host -ForegroundColor Red "`nUnable to find $NSXBundlePath ...`n"
-        exit
+    if($uploadNSXBundlePath -eq 1){
+        if(!(Test-Path $NSXBundlePath)) {
+            Write-Host -ForegroundColor Red "`nUnable to find $NSXBundlePath ...`n"
+            exit
+        }
     }
 
     if($PSVersionTable.PSEdition -ne "Core") {
@@ -396,10 +420,25 @@ if($deployNestedESXiVMs -eq 1) {
 
         My-Logger "Updating vCPU Count to $NestedESXivCPU & vMEM to $NestedESXivMEM GB ..."
         Set-VM -Server $viConnection -VM $vm -NumCpu $NestedESXivCPU -CoresPerSocket $NestedESXivCPU -MemoryGB $NestedESXivMEM -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
-
-        My-Logger "Updating vSAN Cache VMDK size to $NestedESXiCachingvDisk GB & Capacity VMDK size to $NestedESXiCapacityvDisk GB ..."
-        Get-HardDisk -Server $viConnection -VM $vm -Name "Hard disk 2" | Set-HardDisk -CapacityGB $NestedESXiCachingvDisk -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
-        Get-HardDisk -Server $viConnection -VM $vm -Name "Hard disk 3" | Set-HardDisk -CapacityGB $NestedESXiCapacityvDisk -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+        
+        if($setupNFSforNestedESXiVMs -eq 1) {
+            My-Logger "Updating vmnic1 and vmnic3 to use outer NFS network"
+            $nfsOuterPortGroup = Get-VirtualNetwork -Name $NFSNetwork -Location ($cluster | Get-Datacenter)
+            Get-NetworkAdapter -Server $viConnection -VM $vm -Name "Network adapter 2" | Set-NetworkAdapter -Type Vmxnet3 -NetworkName $nfsOuterPortGroup -StartConnected $true -confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+            Get-NetworkAdapter -Server $viConnection -VM $vm -Name "Network adapter 4" | Set-NetworkAdapter -Type Vmxnet3 -NetworkName $nfsOuterPortGroup -StartConnected $true -confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+        }
+        
+        if($configureVSANDiskGroup -eq 1) {
+            My-Logger "Updating vSAN Cache VMDK size to $NestedESXiCachingvDisk GB & Capacity VMDK size to $NestedESXiCapacityvDisk GB ..."
+            Get-HardDisk -Server $viConnection -VM $vm -Name "Hard disk 2" | Set-HardDisk -CapacityGB $NestedESXiCachingvDisk -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+            Get-HardDisk -Server $viConnection -VM $vm -Name "Hard disk 3" | Set-HardDisk -CapacityGB $NestedESXiCapacityvDisk -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+			
+			My-Logger "Updating vSAN Boot Disk size to $NestedESXiBootDisk GB ..."
+            Get-HardDisk -Server $viConnection -VM $vm -Name "Hard disk 1" | Set-HardDisk -CapacityGB $NestedESXiBootDisk -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+			
+        } else {
+            Get-HardDisk -Server $viConnection -VM $vm -Name "Hard disk 3" | Set-HardDisk -CapacityGB $NestedESXiCapacityvDisk -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+        }
 
         My-Logger "Powering On VM..."
         $vm | Start-Vm -RunAsync | Out-Null
@@ -435,6 +474,35 @@ if($moveVMsIntovApp -eq 1) {
 if( $deployNestedESXiVMs -eq 1) {
     My-Logger "Disconnecting from $VIServer ..."
     Disconnect-VIServer -Server $viConnection -Confirm:$false
+}
+
+if($setupNFSforNestedESXiVMs -eq 1) {    
+	$NestedESXiNFSkernelIPs.GetEnumerator() | Sort-Object -Property Key | Foreach-Object {
+		$VMIPAddress = $_.Key
+        $VMKNFSIPAddress = $_.Value
+		$targetVMHost = $VMIPAddress
+        
+        do {
+        My-Logger "Waiting for $targetVMHost to be ready on network ..."
+        $ping = test-connection $targetVMHost -Quiet
+        sleep 60
+        } until ($ping -contains "True")
+        
+        My-Logger "Connecting to Nested ESXi VM $targetVMHost ..."
+		$viConnectionESXi = Connect-VIServer $targetVMHost -User "root" -Password $VMPassword -WarningAction SilentlyContinue
+        $network = Get-VMHostNetwork -VMHost $targetVMHost -Server $viConnectionESXi
+        $phNic = $network.PhysicalNic[1].DeviceName
+        #sleep 60
+        My-Logger "New vSwitch NFSvSwitch with vmnic1, Mtu $NFSMTU"
+        $vswitch = New-VirtualSwitch -Server $viConnectionESXi -Name NFSvSwitch -Nic $phNic -Mtu $NFSMTU
+        
+        My-Logger "New vmk1 with IP $VMKNFSIPAddress, SubnetMask 255.255.255.0, PortGroup VMKernel for NFS, NFSPortgroup, VLanId $NfsVlanId"
+        $NFSPortgroup = New-VirtualPortGroup -VirtualSwitch $vswitch -Name "NFSPortgroup" -VLanId $NfsVlanId | Out-File -Append -LiteralPath $verboseLogFile
+        New-VMHostNetworkAdapter -Server $viConnectionESXi -PortGroup "VMKernel for NFS" -VirtualSwitch $vswitch -IP $VMKNFSIPAddress -SubnetMask 255.255.255.0 | Out-File -Append -LiteralPath $verboseLogFile
+        Get-VirtualPortgroup -Name "VMKernel for NFS" | Set-VirtualPortgroup -VLanId $NfsVmk1VlanId  | Out-File -Append -LiteralPath $verboseLogFile
+        My-Logger "New-Datastore $NfsDatastoreName with Path $NfsDatastorePath on Host $NfsHost"
+        New-Datastore -Nfs -Server $viConnectionESXi -Name $NfsDatastoreName -Path $NfsDatastorePath -NfsHost $NfsHost | Out-File -Append -LiteralPath $verboseLogFile
+    }
 }
 
 if($bootStrapFirstNestedESXiVM -eq 1) {
@@ -501,7 +569,11 @@ if($deployVCSA -eq 1) {
     $config.'new_vcsa'.esxi.username = "root"
     $config.'new_vcsa'.esxi.password = $VMPassword
     $config.'new_vcsa'.esxi.deployment_network = "VM Network"
-    $config.'new_vcsa'.esxi.datastore = "vsanDatastore"
+    if($bootStrapFirstNestedESXiVM -eq "true") {
+        $config.'new_vcsa'.esxi.datastore = "vsanDatastore"
+    } else {
+        $config.'new_vcsa'.esxi.datastore = "$NfsDatastoreName"
+    }
     $config.'new_vcsa'.appliance.thin_disk_mode = $true
     $config.'new_vcsa'.appliance.deployment_option = $VCSADeploymentSize
     $config.'new_vcsa'.appliance.name = $VCSADisplayName
@@ -559,10 +631,18 @@ if($setupNewVC -eq 1) {
 
     $c = Get-Cluster -Server $vc $NewVCVSANClusterName -ErrorAction Ignore
     if( -Not $c) {
-        My-Logger "Creating VSAN Cluster $NewVCVSANClusterName ..."
-        New-Cluster -Server $vc -Name $NewVCVSANClusterName -Location (Get-Datacenter -Name $NewVCDatacenterName -Server $vc) -DrsEnabled -DrsAutomationLevel Manual -HAEnabled -VsanEnabled | Out-File -Append -LiteralPath $verboseLogFile
+        if($setupNFSforNestedESXiVMs -eq 0 -and $configureVSANDiskGroup -eq 1) {
+            My-Logger "Creating VSAN Cluster $NewVCVSANClusterName ..."
+            New-Cluster -Server $vc -Name $NewVCVSANClusterName -Location (Get-Datacenter -Name $NewVCDatacenterName -Server $vc) -DrsEnabled -DrsAutomationLevel Manual -HAEnabled -VsanEnabled | Out-File -Append -LiteralPath $verboseLogFile
 
-        (Get-Cluster $NewVCVSANClusterName) | New-AdvancedSetting -Name "das.ignoreRedundantNetWarning" -Type ClusterHA -Value $true -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+            (Get-Cluster $NewVCVSANClusterName) | New-AdvancedSetting -Name "das.ignoreRedundantNetWarning" -Type ClusterHA -Value $true -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+        } elseif ($setupNFSforNestedESXiVMs -eq 1 -and $configureVSANDiskGroup -eq 0){
+            My-Logger "Creating NFS Cluster $NewVCVSANClusterName ..."
+            New-Cluster -Server $vc -Name $NewVCVSANClusterName -Location (Get-Datacenter -Name $NewVCDatacenterName -Server $vc) -DrsEnabled -DrsAutomationLevel Manual -HAEnabled | Out-File -Append -LiteralPath $verboseLogFile
+
+            (Get-Cluster $NewVCVSANClusterName) | New-AdvancedSetting -Name "das.ignoreRedundantNetWarning" -Type ClusterHA -Value $true -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+            (Get-Cluster $NewVCVSANClusterName) | New-AdvancedSetting -Name "das.ignoreInsufficientHbDatastore" -Type ClusterHA -Value $true -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+        }
     }
 
     if($addESXiHostsToVC -eq 1) {
@@ -588,9 +668,20 @@ if($setupNewVC -eq 1) {
             $totalHaHosts = $haRuntime.TotalHosts
             $totalHaGoodHosts = $haRuntime.TotalGoodHosts
         }
+        Start-Sleep -Seconds 90
+    }
+    
+    if($EnableVLCM -eq 1) {    
+        #update
+        My-Logger "Converting Cluster $NewVCVSANClusterName to vLCM image with current version $vLCMversion"
+        $UpdateLcmImage = Get-LcmImage -Server $vc -Version $vLCMversion
+        Get-Cluster -Name $NewVCVSANClusterName | Set-Cluster -Server $vc -BaseImage $UpdatelcmImage -Confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+
+        My-Logger "Wait 180s for Compliance and Remediation to complete."
+        Sleep 180
     }
 
-    if($configureVSANDiskGroup -eq 1) {
+    if($setupNFSforNestedESXiVMs -eq 0 -and $configureVSANDiskGroup -eq 1) {
         My-Logger "Enabling VSAN & disabling VSAN Health Check ..."
         Get-VsanClusterConfiguration -Server $vc -Cluster $NewVCVSANClusterName | Set-VsanClusterConfiguration -HealthCheckIntervalMinutes 0 | Out-File -Append -LiteralPath $verboseLogFile
 
@@ -613,7 +704,7 @@ if($setupNewVC -eq 1) {
         }
     }
     
-    if($setupVsanStoragePolicy -eq 1) {
+    if($setupNFSforNestedESXiVMs -eq 0 -and $setupVsanStoragePolicy -eq 1) {
         $datastore = Get-Datastore -Server $vc -Name "vsanDatastore" | Select -First 1
         My-Logger "Creating VSAN Storage Policies $StoragePolicyName and attaching to $datastore ..."        
         $ftt = Get-SpbmCapability -Name 'VSAN.hostFailuresToTolerate'
@@ -638,9 +729,9 @@ if($configureVDS -eq 1) {
     $vc = Connect-VIServer $VCSAIPAddress -User "administrator@$VCSASSODomainName" -Password $VCSASSOPassword -WarningAction SilentlyContinue
 
     # vmnic0 = Management on VSS
-    # vmnic1 = unused
+    # vmnic1 = Nfs on VSS
     # vmnic2 = Management on VDS (uplink1)
-    # vmnic3 = unused
+    # vmnic3 = Nfs on VDS (uplink2)
 
     $vds = Get-VDSwitch -Server $vc $NewVCVDSName -ErrorAction Ignore
     if( -not $vds) {
@@ -651,7 +742,10 @@ if($configureVDS -eq 1) {
     My-Logger "Creating VDS Management Network Portgroup"
     New-VDPortgroup -Server $vc -Name $NewVCMgmtPortgroupName -Vds $vds | Out-File -Append -LiteralPath $verboseLogFile
     Get-VDPortgroup -Server $vc $NewVCMgmtPortgroupName | Get-VDUplinkTeamingPolicy | Set-VDUplinkTeamingPolicy -ActiveUplinkPort @("dvUplink1") -UnusedUplinkPort @("dvUplink2") | Out-File -Append -LiteralPath $verboseLogFile
-
+    My-Logger "Creating VDS Nfs Network Portgroup with Vlan $NfsVmk1VlanId"
+    New-VDPortgroup -Server $vc -Name $NewVCNfsPortgroupName -Vds $vds -VLanId $NfsVmk1VlanId | Out-File -Append -LiteralPath $verboseLogFile
+    Get-VDPortgroup -Server $vc $NewVCNfsPortgroupName | Get-VDUplinkTeamingPolicy | Set-VDUplinkTeamingPolicy -ActiveUplinkPort @("dvUplink2") -UnusedUplinkPort @("dvUplink1") | Out-File -Append -LiteralPath $verboseLogFile
+    
     foreach ($vmhost in Get-Cluster -Server $vc | Get-VMHost) {
         My-Logger "Adding $vmhost to $NewVCVDSName ..."
         $vds | Add-VDSwitchVMHost -VMHost $vmhost | Out-Null
@@ -668,13 +762,21 @@ if($configureVDS -eq 1) {
     }
 
     if($migrateVmkernelToVDS -eq 1) {
-        $dvportgroup = Get-VDPortgroup -Server $vc -name $NewVCMgmtPortgroupName
+        $dvportgroupmgmt = Get-VDPortgroup -Server $vc -name $NewVCMgmtPortgroupName
+        $dvportgroupnfs = Get-VDPortgroup -Server $vc -name $NewVCNfsPortgroupName
 
-        My-Logger "Migrating VMkernel network to VDS ..."
+        My-Logger "Migrating VMkernel0 network to VDS ..."
         foreach ($vmhost in Get-Cluster -Server $vc | Get-VMHost) {
             $vmk = Get-VMHostNetworkAdapter -Server $vc -Name vmk0 -VMHost $vmhost
-            Set-VMHostNetworkAdapter -PortGroup $dvportgroup -VirtualNic $vmk -confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+            Set-VMHostNetworkAdapter -PortGroup $dvportgroupmgmt -VirtualNic $vmk -confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
             Get-VMHostNetworkAdapter -Server $vc -Name vmk0 -VMHost $vmhost | Set-VMHostNetworkAdapter -Mtu $NewVCVDSMTU -confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+        }
+        
+        My-Logger "Migrating VMkernel1 network to VDS and  ..."
+        foreach ($vmhost in Get-Cluster -Server $vc | Get-VMHost) {
+            $vmk1 = Get-VMHostNetworkAdapter -Server $vc -Name vmk1 -VMHost $vmhost
+            Set-VMHostNetworkAdapter -PortGroup $dvportgroupnfs -VirtualNic $vmk1 -confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
+            Get-VMHostNetworkAdapter -Server $vc -Name vmk1 -VMHost $vmhost | Set-VMHostNetworkAdapter -Mtu $NewVCVDSMTU -confirm:$false | Out-File -Append -LiteralPath $verboseLogFile
         }
     }
 
@@ -682,6 +784,13 @@ if($configureVDS -eq 1) {
         My-Logger "Removing VSS from ESXi hosts ..."
         foreach ($vmhost in Get-Cluster -Server $vc | Get-VMHost) {
             $vswitch = Get-VirtualSwitch -Server $vc -VMHost $vmhost -Name vSwitch0
+
+            Remove-VirtualSwitch -Server $vc -VirtualSwitch $vswitch -confirm:$false
+        }
+        
+        My-Logger "Removing VSS from ESXi hosts ..."
+        foreach ($vmhost in Get-Cluster -Server $vc | Get-VMHost) {
+            $vswitch = Get-VirtualSwitch -Server $vc -VMHost $vmhost -Name NFSvSwitch
 
             Remove-VirtualSwitch -Server $vc -VirtualSwitch $vswitch -confirm:$false
         }
@@ -743,11 +852,16 @@ if($finalCleanUp -eq 1) {
 if($deploySDDCManager -eq 1) {
     My-Logger "Connecting to the new VCSA ..."
     $vc = Connect-VIServer $VCSAIPAddress -User "administrator@$VCSASSODomainName" -Password $VCSASSOPassword -WarningAction SilentlyContinue
+    
+    $datastore = Get-Datastore -Server $vc -Name "vsanDatastore" -ErrorAction Ignore | Select -First 1
 
-    $datastore = Get-Datastore -Server $vc -Name "vsanDatastore" | Select -First 1
+    if( -not $datastore) {
+        $datastore = Get-Datastore -Server $vc -Name $NfsDatastoreName | Select -First 1
+    }
     $cluster = Get-Cluster -Server $vc -Name $NewVCVSANClusterName
 
-    $vmhost = $cluster | Get-VMHost | where {$_.Name -ne $((Get-VM -Server $vc -Name $VCSADisplayName | Get-VMHost).Name)} | Select -Last 1
+    #$vmhost = $cluster | Get-VMHost | where {$_.Name -ne $((Get-VM -Server $vc -Name $VCSADisplayName | Get-VMHost).Name)} | Select -Last 1
+    $vmhost = $cluster | Get-VMHost | where {$_.Name -eq $((Get-VM -Server $vc -Name $VCSADisplayName | Get-VMHost).Name)} | Select -Last 1
 
     $ovfconfig = Get-OvfConfiguration -Server $vc $SDDCManagerOVA
     $networkMapLabel = ($ovfconfig.ToHashTable().keys | where {$_ -Match "NetworkMapping"}).replace("NetworkMapping.","").replace("-","_").replace(" ","_")
@@ -776,12 +890,26 @@ if($deploySDDCManager -eq 1) {
     My-Logger "Powering On VM ..."
     $vm | Start-Vm -RunAsync | Out-Null
 
-    My-Logger "Waiting 7 minutes for SDDC Manager VM to be up, meanwhile double-check no $SddcManagerHostname entry in ~\.ssh\known_hosts ..."
+    My-Logger "Waiting 7 minutes for SDDC Manager VM to be up, meanwhile double-check No entry of $SddcManagerHostname in ~\.ssh\known_hosts in the workstation where is running this PowerCLI script ..."
     Start-Sleep -Seconds 420
 
     My-Logger "Disconnecting from new VCSA ..."
     Disconnect-VIServer $vc -Confirm:$false
 }
+
+if($pinningVCSDDCMvm -eq 1) {
+    $viConnection = Connect-VIServer $VCSAIPAddress -User "administrator@$VCSASSODomainName" -Password $VCSASSOPassword -WarningAction SilentlyContinue
+    $firstvmHost =  Get-Cluster "Cluster" -Server $viConnection | Get-VMHost -Name *01*
+    $targetvmHost =  Get-Cluster "Cluster" -Server $viConnection | Get-VMHost -Name *02*
+    My-Logger "Pinning $VCSADisplayName and $SddcManagerDisplayName to $targetvmHost in preparation for NSX deployment on $firstvmHost"
+    $VCSDDCMVMGroup = New-DrsClusterGroup -Cluster "Cluster" -VM "$VCSADisplayName", "$SddcManagerDisplayName" -Name "VC-SDDCMVMGroup" -Server $viConnection
+    $VCSDDCMVMHostGroup = New-DrsClusterGroup -Cluster "Cluster" -VMHost $targetvmHost.Name -Name "VC-SDDCMVMHostGroup" -Server $viConnection 
+    New-DrsVMHostRule -Name "VC-SDDCMRule" -Cluster "Cluster" -VMGroup $VCSDDCMVMGroup -VMHostGroup $VCSDDCMVMHostGroup -Type "MustRunOn" -Server $viConnection | Out-File -Append -LiteralPath $verboseLogFile
+    My-Logger "Waiting 4 minutes for DRS to finish migrate $VCSADisplayName to $targetvmHost"
+    Start-Sleep -Seconds 240
+    Disconnect-VIServer -Server $viConnection -Confirm:$false
+}
+
 
 if($uploadVCFImportTool -eq 1) {
     My-Logger "Connecting to new vCenter Server $VCSADisplayName ..."
@@ -800,6 +928,8 @@ if($uploadVCFImportTool -eq 1) {
 
     # SDDCm
     $sddcmVM = Get-VM -Server $viConnection $SddcManagerDisplayName
+    
+    
 
     My-Logger "Copying $VCFImportToolpath to SDDC Manager $SddcManagerDisplayName under /home/vcf ..."
     Copy-VMGuestFile -VM $sddcmVM -Source $VCFImportToolpath -Destination "/home/vcf" -LocalToGuest -GuestUser "vcf" -GuestPassword $SddcManagerVcfPassword
